@@ -17,22 +17,56 @@ export default function DashboardPage() {
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  // Fetch bookmarks
   const fetchBookmarks = async () => {
-    const res = await fetch('/api/bookmarks', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setBookmarks(data);
+    try {
+      const response = await fetch('/api/bookmarks', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}` // If you're using a token for authorization
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookmarks');
+      }
+
+      const data = await response.json();
+      setBookmarks(data);
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+    }
   };
 
+  // Fetch summary from the Jina AI API
+  const fetchSummary = async (url: string) => {
+    try {
+      const res = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      console.log('-------------res------', res)
+
+      const data = await res.json();
+      console.log('----------Received summary-----------:', data.summary);
+
+      return data.summary;
+    } catch {
+      return 'Summary temporarily unavailable.';
+    }
+  };
+
+  // Handle save bookmark
   const handleSave = async () => {
+    const summary = await fetchSummary(url);
     const res = await fetch('/api/bookmarks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, summary }),
     });
 
     if (res.ok) {
@@ -41,6 +75,7 @@ export default function DashboardPage() {
     }
   };
 
+  // Handle delete bookmark
   const handleDelete = async (id: string) => {
     await fetch(`/api/bookmarks/${id}`, {
       method: 'DELETE',
@@ -49,14 +84,34 @@ export default function DashboardPage() {
     fetchBookmarks();
   };
 
+  // Handle signout
+  const handleSignOut = () => {
+    // Remove the token from localStorage
+    localStorage.removeItem('token');
+    
+    // Redirect the user to the login page
+    router.push('/login');
+  };
+
   useEffect(() => {
-    if (!token) router.push('/login');
-    else fetchBookmarks();
+    if (!token) {
+      router.push('/login');
+    } else {
+      fetchBookmarks();
+    }
   }, []);
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">My Bookmarks</h1>
+
+      <button 
+        onClick={handleSignOut} 
+        className="bg-red-600 text-white px-4 py-2 rounded mb-4"
+      >
+        Sign Out
+      </button>
+
       <div className="flex mb-4 gap-2">
         <input
           type="text"
@@ -78,7 +133,9 @@ export default function DashboardPage() {
               <a href={b.url} target="_blank" className="text-blue-700 underline">
                 {b.title}
               </a>
-              <p className="text-sm text-gray-600">{b.summary}</p>
+              <p className="whitespace-pre-line text-sm text-gray-700">
+                {b.summary}
+              </p>
             </div>
             <button onClick={() => handleDelete(b._id)} className="text-red-600">Delete</button>
           </div>

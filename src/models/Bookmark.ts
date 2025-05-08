@@ -5,7 +5,11 @@ const BookmarkSchema = new mongoose.Schema({
   title: String,
   favicon: String,
   summary: String,
-  userId: mongoose.Types.ObjectId,
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
 });
 
 export default mongoose.models.Bookmark || mongoose.model("Bookmark", BookmarkSchema);
