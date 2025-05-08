@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 type Bookmark = {
   _id: string;
@@ -88,7 +89,7 @@ export default function DashboardPage() {
   const handleSignOut = () => {
     // Remove the token from localStorage
     localStorage.removeItem('token');
-    
+
     // Redirect the user to the login page
     router.push('/login');
   };
@@ -99,14 +100,14 @@ export default function DashboardPage() {
     } else {
       fetchBookmarks();
     }
-  }, []);
+  }, [token]);
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">My Bookmarks</h1>
 
-      <button 
-        onClick={handleSignOut} 
+      <button
+        onClick={handleSignOut}
         className="bg-red-600 text-white px-4 py-2 rounded mb-4"
       >
         Sign Out
@@ -128,7 +129,8 @@ export default function DashboardPage() {
       <div className="grid gap-4">
         {bookmarks.map(b => (
           <div key={b._id} className="p-4 border rounded flex items-center gap-4">
-            <img src={b.favicon} className="w-6 h-6" />
+            <Image src={b.favicon} alt="favicon" width={24} height={24} className="w-6 h-6" />
+
             <div className="flex-1">
               <a href={b.url} target="_blank" className="text-blue-700 underline">
                 {b.title}
