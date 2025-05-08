@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
         console.log("--------summary---------", summary)
         return NextResponse.json({ summary })
     } catch (err) {
+        console.log(err)
         return NextResponse.json(
             { summary: 'Summary temporarily unavailable.' },
             { status: 500 }
