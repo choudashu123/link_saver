@@ -1,8 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-
 type Bookmark = {
   _id: string;
   title: string;
@@ -51,16 +49,31 @@ export default function DashboardPage() {
 
       const data = await res.json();
       console.log('----------Received summary-----------:', data.summary);
+      const summary = extractSummary(data.summary);
 
-      return data.summary;
+      return summary;
     } catch {
       return 'Summary temporarily unavailable.';
     }
   };
+  const extractSummary = (content: string) => {
+    const marker = 'Markdown Content:';
+    const contentIndex = content.indexOf(marker)
+
+    if (contentIndex == -1) return "summary unavailable"
+    const lines = content.slice(contentIndex + marker.length).split('\n');
+
+    // Return the first non-empty line after the marker
+    const firstLine = lines.find(line => line.trim() !== '');
+    console.log("Markdown ----------------", firstLine)
+
+    return firstLine || 'Summary temporarily unavailable.';
+  }
 
   // Handle save bookmark
   const handleSave = async () => {
     const summary = await fetchSummary(url);
+    console.log('summary-----------------', summary)
     const res = await fetch('/api/bookmarks', {
       method: 'POST',
       headers: {
@@ -129,7 +142,7 @@ export default function DashboardPage() {
       <div className="grid gap-4">
         {bookmarks.map(b => (
           <div key={b._id} className="p-4 border rounded flex items-center gap-4">
-            <Image src={b.favicon} alt="favicon" width={24} height={24} className="w-6 h-6" />
+            <img src={b.favicon} alt="favicon" width={24} height={24} className="w-6 h-6" />
 
             <div className="flex-1">
               <a href={b.url} target="_blank" className="text-blue-700 underline">
